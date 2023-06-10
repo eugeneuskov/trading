@@ -19,3 +19,17 @@
 
 # Go workspace file
 go.work
+
+# Project
+.idea
+.DS_Store
+hooks/*
+
+/docker-compose.yml
+/config/config.yml
+
+/go/pkg/
+/trading
+/.env
+/logs/*.log
+/logs/*.json
