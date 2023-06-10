@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  trading:
+    container_name: trading
+    build:
+      dockerfile: docker/go/Dockerfile
+      context: .
+    ports:
+      - '8042:8080'
+    volumes:
+      - ./logs:/app/logs
+      - ~/.ssh:/root/.ssh
+    command: ["/app/trading"]
