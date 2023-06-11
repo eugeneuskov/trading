@@ -1,5 +1,8 @@
 FROM golang:1.20-alpine
 
+ARG app_env
+ENV APP_ENV $app_env
+
 RUN apk add --no-cache \
     bash \
     git \

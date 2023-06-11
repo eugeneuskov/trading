@@ -1,4 +1,7 @@
 exchanges:
-  - binance:
-      api_key: '<api-key>'
-      api_secret: '<api-secret>'
+  - exchange_id: '<exchange name>'
+    api_key: '<api-key>'
+    api_secret: '<api-secret>'
+    exchange_url:
+      - '<api1.exchange.com>'
+      - '<api2.exchange.com>'

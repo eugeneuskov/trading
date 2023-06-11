@@ -26,7 +26,8 @@ go.work
 hooks/*
 
 /docker-compose.yml
-/config/config.yml
+/config/config_test.yml
+/config/config_prod.yml
 
 /go/pkg/
 /trading

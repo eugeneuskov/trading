@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"trading/app"
 	"trading/config"
 )
 
@@ -16,6 +17,9 @@ func main() {
 		return
 	}
 
+	application := app.NewApplication(appConfig)
+	application.Run()
+
 	fmt.Printf("%+v\n", appConfig)
 
 	println("App started")
@@ -23,4 +27,6 @@ func main() {
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 	<-quit
 	println("\nApp shutting down...")
+
+	application.Shutdown()
 }
