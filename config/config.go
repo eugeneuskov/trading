@@ -7,10 +7,7 @@ import (
 	"os"
 )
 
-type appMode string
-
 const (
-	appModeTest = "test"
 	appModeProd = "prod"
 )
 
