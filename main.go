@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -19,8 +18,6 @@ func main() {
 
 	application := app.NewApplication(appConfig)
 	application.Run()
-
-	fmt.Printf("%+v\n", appConfig)
 
 	println("App started")
 	quit := make(chan os.Signal, 1)
