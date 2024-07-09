@@ -1,13 +1,64 @@
 version: '3.9'
 
+networks:
+  trading:
+    driver: bridge
+
+volumes:
+  database_volume:
+
 services:
+
+  db:
+    container_name: db
+    image: postgres:15.7-alpine
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - ${POSTGRES_EXTERNAL_PORT:-5452}:5432
+    volumes:
+      - database_volume:/var/lib/postgresql/data
+    networks:
+      trading:
+        aliases:
+            - db
+
+  migrate:
+    container_name: migrate
+    image: migrate/migrate
+    env_file: .env
+    networks:
+      - trading
+    volumes:
+      - ./migrations:/migrations
+    command: [
+      "-path",
+      "/migrations",
+      "-database",
+      "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DATABASE}?sslmode=disable",
+      "up",
+      "3"
+    ]
+    links:
+      - db
+    depends_on:
+      - db
+
   trading:
     container_name: trading
     build:
       dockerfile: docker/go/Dockerfile
       context: .
+    networks:
+      - trading
+    env_file: .env
     ports:
-      - '8042:8080'
+      - ${APP_EXTERNAL_PORT:-8042}:8080
+    depends_on:
+      - db
     volumes:
       - ./logs:/app/logs
       - ~/.ssh:/root/.ssh

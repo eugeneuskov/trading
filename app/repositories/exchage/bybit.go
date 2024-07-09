@@ -137,7 +137,7 @@ func (b *ByBitExchange) SetupOrder(order *structures.CreateOrder) (*structures.E
 	return &structures.ExchangeOrder{}, nil
 }
 
-func (b *ByBitExchange) CancelOrder(order *structures.DeleteOrder) ([]*structures.ExchangeOrder, error) {
+func (b *ByBitExchange) CancelOrder(order *structures.DeleteOrder) (*structures.ExchangeOrder, error) {
 	return nil, nil
 }
 
