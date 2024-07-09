@@ -50,6 +50,56 @@ func (h *HttpClientService) Get(url string, header http.Header, query url.Values
 	return resp.Body(), nil
 }
 
+func (h *HttpClientService) Post(url string, header http.Header, params []byte) ([]byte, error) {
+	resp, err := h.client.R().
+		SetBody(params).
+		SetHeaders(headers(header)).
+		Post(url)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
+	}(resp.RawBody())
+
+	if resp.IsError() {
+		var errMessage errorMessage
+		err = json.Unmarshal(resp.Body(), &errMessage)
+		if err != nil {
+			return nil, errors.New(resp.Status())
+		}
+		return nil, errors.New(errMessage.Msg)
+	}
+
+	return resp.Body(), nil
+}
+
+func (h *HttpClientService) Delete(url string, header http.Header, query url.Values) ([]byte, error) {
+	resp, err := h.client.R().
+		SetQueryString(query.Encode()).
+		SetHeaders(headers(header)).
+		Delete(url)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
+	}(resp.RawBody())
+
+	if resp.IsError() {
+		var errMessage errorMessage
+		err = json.Unmarshal(resp.Body(), &errMessage)
+		if err != nil {
+			return nil, errors.New(resp.Status())
+		}
+		return nil, errors.New(errMessage.Msg)
+	}
+
+	return resp.Body(), nil
+}
+
 func headers(header http.Header) map[string]string {
 	h := make(map[string]string)
 

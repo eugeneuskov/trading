@@ -3,34 +3,25 @@ package exchage
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
+	"trading/app/repositories/exchage/responses"
 	"trading/app/services"
 	"trading/app/structures"
 )
 
 const (
-	timestampKey = "timestamp"
-	signatureKey = "signature"
+	binanceSignatureKey = "signature"
+
+	binanceUriAccount      = "/api/v3/account"
+	binanceUriCreateOrder  = "/api/v3/order"
+	binanceUriDeleteOrders = "/api/v3/order"
 )
-
-type balanceResponse struct {
-	Coin   string `json:"asset"`
-	Free   string `json:"free"`
-	Locked string `json:"locked"`
-}
-
-type balanceInfoResponse struct {
-	CanTrade    bool              `json:"canTrade"`
-	CanWithdraw bool              `json:"canWithdraw"`
-	CanDeposit  bool              `json:"canDeposit"`
-	Balances    []balanceResponse `json:"balances"`
-}
 
 type BinanceExchange struct {
 	id          string
@@ -62,7 +53,7 @@ func (e *BinanceExchange) Auth() *structures.Token {
 }
 
 func (e *BinanceExchange) GetBalances() (*structures.BalanceInfo, error) {
-	req, err := e.request("/api/v3/account", url.Values{})
+	req, err := e.buildRequest(binanceUriAccount, url.Values{})
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +63,7 @@ func (e *BinanceExchange) GetBalances() (*structures.BalanceInfo, error) {
 		return nil, err
 	}
 
-	var balanceData balanceInfoResponse
+	var balanceData responses.BinanceBalanceInfoResponse
 	err = json.Unmarshal(responseBody, &balanceData)
 	if err != nil {
 		return nil, err
@@ -99,60 +90,98 @@ func (e *BinanceExchange) GetBalances() (*structures.BalanceInfo, error) {
 	}, nil
 }
 
-func (e *BinanceExchange) SetupOrder(order *structures.Order) error {
-	return nil
-}
+func (e *BinanceExchange) SetupOrder(order *structures.CreateOrder) (*structures.ExchangeOrder, error) {
+	queryParams := url.Values{}
+	queryParams.Add("symbol", order.Symbol())
+	queryParams.Add("side", order.Side())
+	queryParams.Add("type", order.OrderType())
+	queryParams.Add("timeInForce", "GTC")
+	queryParams.Add("quantity", order.Quantity())
+	queryParams.Add("price", order.Price())
 
-func (e *BinanceExchange) CancelOrder(order *structures.Order) error {
-	return nil
-}
-
-type request struct {
-	method     string
-	endpoint   string
-	query      url.Values
-	form       url.Values
-	recvWindow int64
-	secType    int8
-	header     http.Header
-	body       io.Reader
-	fullUrl    string
-}
-
-func (e *BinanceExchange) request(
-	endpoint string,
-	query url.Values,
-) (*request, error) {
-	query.Set(timestampKey, fmt.Sprintf("%v", time.Now().UnixNano()/int64(time.Millisecond)))
-	queryString := query.Encode()
-
-	signature, err := e.signRequest(queryString)
+	req, err := e.buildRequest(binanceUriCreateOrder, queryParams)
 	if err != nil {
 		return nil, err
 	}
-	query.Set(signatureKey, signature)
 
-	header := http.Header{}
-	header.Set("X-MBX-APIKEY", e.credentials.ApiKey())
+	responseBody, err := e.httpClient.Post(req.fullUrl, req.header, []byte(req.query.Encode()))
+	if err != nil {
+		return nil, err
+	}
 
-	return &request{
-		endpoint:   endpoint,
-		query:      query,
-		form:       nil,
-		recvWindow: 0,
-		secType:    2,
-		header:     header,
-		body:       nil,
-		fullUrl:    fmt.Sprintf("%s%s", e.baseUrls[0], endpoint),
+	var newOrder responses.BinanceOrderResponse
+	err = json.Unmarshal(responseBody, &newOrder)
+	if err != nil {
+		return nil, err
+	}
+
+	return &structures.ExchangeOrder{
+		Symbol:       newOrder.Symbol,
+		OrderId:      newOrder.OrderId,
+		TransactTime: newOrder.TransactTime,
+		Price:        newOrder.Price,
+		Quantity:     newOrder.OriginalQuantity,
+		Status:       newOrder.Status,
+		Type:         newOrder.Type,
+		Side:         newOrder.Side,
 	}, nil
 }
 
-func (e *BinanceExchange) signRequest(raw string) (string, error) {
-	mac := hmac.New(sha256.New, []byte(e.credentials.ApiSecret()))
-	_, err := mac.Write([]byte(raw))
+func (e *BinanceExchange) CancelOrder(order *structures.DeleteOrder) (*structures.ExchangeOrder, error) {
+	queryParams := url.Values{}
+	queryParams.Set("symbol", order.Symbol())
+	queryParams.Set("orderId", order.ID())
+
+	req, err := e.buildRequest(binanceUriDeleteOrders, queryParams)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return fmt.Sprintf("%x", mac.Sum(nil)), nil
+	responseBody, err := e.httpClient.Delete(req.fullUrl, req.header, req.query)
+	if err != nil {
+		return nil, err
+	}
+
+	var deletedOrder responses.BinanceOrderResponse
+	err = json.Unmarshal(responseBody, &deletedOrder)
+	if err != nil {
+		return nil, err
+	}
+
+	return &structures.ExchangeOrder{
+			Symbol:       deletedOrder.Symbol,
+			OrderId:      deletedOrder.OrderId,
+			TransactTime: deletedOrder.TransactTime,
+			Price:        deletedOrder.Price,
+			Quantity:     deletedOrder.OriginalQuantity,
+			Status:       deletedOrder.Status,
+			Type:         deletedOrder.Type,
+			Side:         deletedOrder.Side,
+		}, nil
+}
+
+func (e *BinanceExchange) buildRequest(
+	endpoint string,
+	query url.Values,
+) (*request, error) {
+	query.Set(timestampKey, strconv.FormatInt(time.Now().Unix()*1000, 10))
+	queryString := query.Encode()
+	query.Set(binanceSignatureKey, e.signRequest(queryString))
+
+	header := http.Header{}
+	header.Set("X-MBX-APIKEY", e.credentials.ApiKey())
+	header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	return &request{
+		query:   query,
+		header:  header,
+		fullUrl: fmt.Sprintf("%s%s", e.baseUrls[0], endpoint),
+	}, nil
+}
+
+func (e *BinanceExchange) signRequest(raw string) string {
+	h := hmac.New(sha256.New, []byte(e.credentials.ApiSecret()))
+	h.Write([]byte(raw))
+
+	return hex.EncodeToString(h.Sum(nil))
 }

@@ -1,50 +1,62 @@
 package structures
 
-import "github.com/google/uuid"
-
-type Order struct {
-	id        uuid.UUID
+type CreateOrder struct {
 	symbol    string
 	side      string
 	orderType string
-	price     float64
-	amount    float64
+	price     string
+	quantity  string
 }
 
-func NewOrder(
-	symbol, side, OrderType string,
-	price, amount float64,
-) *Order {
-	return &Order{
-		id:        uuid.New(),
+func NewCreateOrder(
+	symbol, side, OrderType,
+	price, quantity string,
+) *CreateOrder {
+	return &CreateOrder{
 		symbol:    symbol,
 		side:      side,
 		orderType: OrderType,
 		price:     price,
-		amount:    amount,
+		quantity:  quantity,
 	}
 }
 
-func (o *Order) Id() uuid.UUID {
-	return o.id
+func (co *CreateOrder) Symbol() string {
+	return co.symbol
 }
 
-func (o *Order) Symbol() string {
-	return o.symbol
+func (co *CreateOrder) Side() string {
+	return co.side
 }
 
-func (o *Order) Side() string {
-	return o.side
+func (co *CreateOrder) OrderType() string {
+	return co.orderType
 }
 
-func (o *Order) OrderType() string {
-	return o.orderType
+func (co *CreateOrder) Price() string {
+	return co.price
 }
 
-func (o *Order) Price() float64 {
-	return o.price
+func (co *CreateOrder) Quantity() string {
+	return co.quantity
 }
 
-func (o *Order) Amount() float64 {
-	return o.amount
+type DeleteOrder struct {
+	id     string
+	symbol string
+}
+
+func NewDeleteOrder(id, symbol string) *DeleteOrder {
+	return &DeleteOrder{
+		id:     id,
+		symbol: symbol,
+	}
+}
+
+func (do *DeleteOrder) ID() string  {
+	return do.id
+}
+
+func (do *DeleteOrder) Symbol() string {
+	return do.symbol
 }

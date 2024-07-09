@@ -1,6 +1,8 @@
 package exchage
 
 import (
+	"net/http"
+	"net/url"
 	"trading/app/repositories"
 	"trading/app/services"
 	"trading/app/structures"
@@ -9,6 +11,9 @@ import (
 
 const (
 	exchangeBinanceId = "binance"
+	exchangeBybitId   = "bybit"
+
+	timestampKey = "timestamp"
 )
 
 type ExchangeService struct {
@@ -41,8 +46,24 @@ func (s *ExchangeService) Exchanges() []repositories.Exchange {
 					s.httpClient,
 				),
 			)
+		case exchangeBybitId:
+			exchanges = append(
+				exchanges,
+				NewByBitExchange(
+					conf.Id,
+					structures.NewAuth(conf.ApiKey, conf.ApiSecret),
+					conf.Url,
+					s.httpClient,
+				),
+			)
 		}
 	}
 
 	return exchanges
+}
+
+type request struct {
+	fullUrl string
+	query   url.Values
+	header  http.Header
 }

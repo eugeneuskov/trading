@@ -16,10 +16,11 @@ func main() {
 		return
 	}
 
+	println("App started")
+
 	application := app.NewApplication(appConfig)
 	application.Run()
 
-	println("App started")
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 	<-quit

@@ -6,6 +6,6 @@ type Exchange interface {
 	Id() string
 	Auth() *structures.Token
 	GetBalances() (*structures.BalanceInfo, error)
-	SetupOrder(order *structures.Order) error
-	CancelOrder(order *structures.Order) error
+	SetupOrder(order *structures.CreateOrder) (*structures.ExchangeOrder, error)
+	CancelOrder(order *structures.DeleteOrder) (*structures.ExchangeOrder, error)
 }
