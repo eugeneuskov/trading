@@ -9,6 +9,12 @@ import (
 
 const (
 	appModeProd = "prod"
+
+	postgresHostEnvKey     = "POSTGRES_HOST"
+	postgresPortEnvKey     = "POSTGRES_PORT"
+	postgresUserEnvKey     = "POSTGRES_USER"
+	postgresPasswordEnvKey = "POSTGRES_PASSWORD"
+	postgresDatabaseEnvKey = "POSTGRES_DATABASE"
 )
 
 type Exchange struct {
@@ -18,8 +24,18 @@ type Exchange struct {
 	Url       []string `yaml:"exchange_url"`
 }
 
+type Db struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	DbName   string
+	SslMode  string
+}
+
 type Config struct {
 	Exchanges []Exchange
+	Db
 }
 
 func (c *Config) Init() (*Config, error) {
@@ -37,6 +53,21 @@ func (c *Config) Init() (*Config, error) {
 	decoder := yaml.NewDecoder(file)
 	if err = decoder.Decode(config); err != nil {
 		return nil, err
+	}
+
+	dbHost, _ := envValue(postgresHostEnvKey)
+	dbPort, _ := envValue(postgresPortEnvKey)
+	dbUser, _ := envValue(postgresUserEnvKey)
+	dbPassword, _ := envValue(postgresPasswordEnvKey)
+	dbName, _ := envValue(postgresDatabaseEnvKey)
+
+	config.Db = Db{
+		Host:     dbHost,
+		Port:     dbPort,
+		User:     dbUser,
+		Password: dbPassword,
+		DbName:   dbName,
+		SslMode:  "disable",
 	}
 
 	return config, err

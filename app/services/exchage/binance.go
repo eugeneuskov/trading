@@ -10,8 +10,8 @@ import (
 	"net/url"
 	"strconv"
 	"time"
-	"trading/app/repositories/exchage/responses"
 	"trading/app/services"
+	"trading/app/services/exchage/responses"
 	"trading/app/structures"
 )
 
@@ -46,10 +46,6 @@ func NewBinanceExchange(
 
 func (e *BinanceExchange) Id() string {
 	return e.id
-}
-
-func (e *BinanceExchange) Auth() *structures.Token {
-	return &structures.Token{}
 }
 
 func (e *BinanceExchange) GetBalances() (*structures.BalanceInfo, error) {
@@ -149,15 +145,15 @@ func (e *BinanceExchange) CancelOrder(order *structures.DeleteOrder) (*structure
 	}
 
 	return &structures.ExchangeOrder{
-			Symbol:       deletedOrder.Symbol,
-			OrderId:      deletedOrder.OrderId,
-			TransactTime: deletedOrder.TransactTime,
-			Price:        deletedOrder.Price,
-			Quantity:     deletedOrder.OriginalQuantity,
-			Status:       deletedOrder.Status,
-			Type:         deletedOrder.Type,
-			Side:         deletedOrder.Side,
-		}, nil
+		Symbol:       deletedOrder.Symbol,
+		OrderId:      deletedOrder.OrderId,
+		TransactTime: deletedOrder.TransactTime,
+		Price:        deletedOrder.Price,
+		Quantity:     deletedOrder.OriginalQuantity,
+		Status:       deletedOrder.Status,
+		Type:         deletedOrder.Type,
+		Side:         deletedOrder.Side,
+	}, nil
 }
 
 func (e *BinanceExchange) buildRequest(

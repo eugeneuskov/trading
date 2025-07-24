@@ -27,7 +27,20 @@ services:
             - db
 
   migrate:
+    image: migrate/migrate
     container_name: migrate
+    entrypoint: [ "sh", "-c", "while :; do sleep 2073600; done" ]
+    links:
+      - db
+    depends_on:
+      - db
+    volumes:
+      - ./migrations:/migrations
+    networks:
+      - trading
+
+  migrate_up:
+    container_name: migrate_up
     image: migrate/migrate
     env_file: .env
     networks:
@@ -39,8 +52,7 @@ services:
       "/migrations",
       "-database",
       "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DATABASE}?sslmode=disable",
-      "up",
-      "3"
+      "up"
     ]
     links:
       - db

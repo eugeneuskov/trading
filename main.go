@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "github.com/lib/pq"
 	"log"
 	"os"
 	"os/signal"

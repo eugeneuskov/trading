@@ -19,15 +19,3 @@ func (a Auth) ApiKey() string {
 func (a Auth) ApiSecret() string {
 	return a.apiSecret
 }
-
-type Token struct {
-	token string
-}
-
-func NewToken(token string) Token {
-	return Token{token}
-}
-
-func (t Token) Token() string {
-	return t.token
-}

@@ -3,7 +3,6 @@ package exchage
 import (
 	"net/http"
 	"net/url"
-	"trading/app/repositories"
 	"trading/app/services"
 	"trading/app/structures"
 	"trading/config"
@@ -31,8 +30,8 @@ func NewExchangeService(
 	}
 }
 
-func (s *ExchangeService) Exchanges() []repositories.Exchange {
-	exchanges := make([]repositories.Exchange, 0, len(s.exchangeConfig))
+func (s *ExchangeService) Exchanges() []services.Exchange {
+	exchanges := make([]services.Exchange, 0, len(s.exchangeConfig))
 
 	for _, conf := range s.exchangeConfig {
 		switch conf.Id {

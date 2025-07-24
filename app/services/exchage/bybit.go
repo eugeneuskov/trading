@@ -11,8 +11,8 @@ import (
 	"sort"
 	"strconv"
 	"time"
-	"trading/app/repositories/exchage/responses"
 	"trading/app/services"
+	"trading/app/services/exchage/responses"
 	"trading/app/structures"
 )
 
@@ -47,10 +47,6 @@ func NewByBitExchange(
 
 func (b *ByBitExchange) Id() string {
 	return b.id
-}
-
-func (b *ByBitExchange) Auth() *structures.Token {
-	return &structures.Token{}
 }
 
 func (b *ByBitExchange) GetBalances() (*structures.BalanceInfo, error) {
